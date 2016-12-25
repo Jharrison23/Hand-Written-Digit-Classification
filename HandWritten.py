@@ -64,4 +64,35 @@ with tf.name_scope("Wx_b") as scope:
     # construct linear model
     # Implement the model logistic regression, by using matrix multiplication on the
     # input images x by the weight matrix W and then adding the bias b
-    model = tf.nn.softmax(tf.matmul(x, W) + b)
+    model = tf.nn.softmax(tf.matmul(x, w) + b)
+
+
+# summary operations for collecting data
+# These help visualize the distribution of our weights and biases
+w_h = tf.histogram_summary("weights", w)
+b_h = tf.histogram_summary("bias", b)
+
+
+# Another Scope, create a cost function to help minimize our error during training
+with tf.name_scope("cost_function") as scope:
+    # Uses cross entropy to minimize error
+    cost_function = -tf.reduce_sum(y*tf.log(model))
+
+    # crete a summary to monitor the cost function
+    tf.scalar_summary("cost_function", cost_function)
+
+
+# Last scope used, create an optimization function that makes our model improve during training
+with tf.name_scope("train") as scope:
+
+    # Gradiant descent algorithm which takes our learning rate as a parameter for pacing
+    # and our cost funtion as a parameter to help minimize the error
+    optimizer = tf.train.GradientDescentOptimizer(learning_rate).minimize(cost_function)
+
+
+# initialize all the variables
+init = tf.initialize_all_variables()
+
+
+# Merge all of our summaries into a single operator
+merged_summary_op = tf.merge_all_summaries()
