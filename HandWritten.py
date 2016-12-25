@@ -43,21 +43,21 @@ display_step = 2
 # variable x: Input images represented by a 2d tensor of numbers, 784 is the dimensionalality
 # of a single flattened mnist image, flattening an image is when you convert a 2d array
 # to a 1d array by unstacking the rows and lining them up 28 * 28 = 784
-x = tf.placeholder("float", [none, 784])
+x = tf.placeholder("float", [None, 784])
 
 #output classes y: consist of a 2d tensor, where each row is a one_hot ten dimensional
 # vector showing which digit class the corresponding mnist digit corresponds to
-y = tf.placeholder("float", [none, 10])
+y = tf.placeholder("float", [None, 10])
 
 
 # Setting model weights
 # weights: Probabilities that affect how data flows in the graph
 # They are updated continuously during training so closer to the correct solution
-w = tf.variable(tf.zeros([784, 10]))
+w = tf.Variable(tf.zeros([784, 10]))
 
 # Define biases
 # Bias: Lets us shift our regression line to fit the data better
-b = tf.variable(tf.zeros([10]))
+b = tf.Variable(tf.zeros([10]))
 
 # Create a name scope, scopes help us organize nodes in the graph visualizer called tensorboard
 with tf.name_scope("Wx_b") as scope:
@@ -96,3 +96,50 @@ init = tf.initialize_all_variables()
 
 # Merge all of our summaries into a single operator
 merged_summary_op = tf.merge_all_summaries()
+
+
+# initialize a session which is going to let us execute our dataflow graph
+with tf.Session() as sess:
+    sess.run(init)
+
+    # set our summary writer folder location which will load data to visualize in tensor board
+    summary_writer = tf.train.SummaryWriter('/Users/jamesharrison/Downloads/Hand-Written-Digit-Classification/', graph_def=sess.graph_def)
+
+    # Training cycle
+    for iteration in range(training_iteration):
+
+        #initialize average cost
+        avg_cost = 0
+
+        # compute batch size
+        total_batch = int(mnist.train.num_examples/batch_size)
+
+        # Loop over all batches
+        for i in range(total_batch):
+
+            batch_xs, batch_ys = mnist.train.next_batch(batch_size)
+
+            # Fit our model using the batch data and the gradiant descent algorithm for backpropagation
+            sess.run(optimizer, feed_dict={x: batch_xs, y:batch_ys})
+
+            # compute the average loss
+            avg_cost  += sess.run(cost_function, feed_dict={x: batch_xs, y: batch_ys})/total_batch
+
+            # write logs for each iteration
+            summary_str = sess.run(merged_summary_op, feed_dict={x: batch_xs, y: batch_ys})
+            summary_writer.add_summary(summary_str, iteration*total_batch + i)
+
+        # Display the logs for each iteration step
+        if iteration % display_step == 0:
+            print ("Iteration:", '%04d' % (iteration + 1), "cost=", "{:.9f}".format(avg_cost))
+
+
+    print ("Tuning Completed!")
+
+    # Test model
+    predictions = tf.equal(tf.argmax(model, 1), tf.argmax(y, 1))
+
+    #calculate the accuracy
+    accuracy = tf.reduce_mean(tf.cast(predictions, "float"))
+
+    print("Accuracy", (accuracy.eval({x: mnist.test.images, y: mnist.test.labels})) * 100 )
