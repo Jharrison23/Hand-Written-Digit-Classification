@@ -46,5 +46,22 @@ display_step = 2
 x = tf.placeholder("float", [none, 784])
 
 #output classes y: consist of a 2d tensor, where each row is a one_hot ten dimensional
-# vector showing which digit class the corresponding mnist digit corresponds to 
+# vector showing which digit class the corresponding mnist digit corresponds to
 y = tf.placeholder("float", [none, 10])
+
+
+# Setting model weights
+# weights: Probabilities that affect how data flows in the graph
+# They are updated continuously during training so closer to the correct solution
+w = tf.variable(tf.zeros([784, 10]))
+
+# Define biases
+# Bias: Lets us shift our regression line to fit the data better
+b = tf.variable(tf.zeros([10]))
+
+# Create a name scope, scopes help us organize nodes in the graph visualizer called tensorboard
+with tf.name_scope("Wx_b") as scope:
+    # construct linear model
+    # Implement the model logistic regression, by using matrix multiplication on the
+    # input images x by the weight matrix W and then adding the bias b
+    model = tf.nn.softmax(tf.matmul(x, W) + b)
